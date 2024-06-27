@@ -19,9 +19,17 @@ fn now() -> Res<u64> {
         / 600)
 }
 
+const MAX_WORDS_PER_SESSION: usize = 10;
+
 fn main() -> Res<()> {
     let filename = &get_file_name();
     let mut data = get_csv(filename)?;
-    data.iter_mut().for_each(prompt_word);
+    let mut prompted = 0usize;
+    for line in data.iter_mut() {
+        if line.next <= now()? && prompted < MAX_WORDS_PER_SESSION {
+            prompt_word(line);
+            prompted += 1;
+        }
+    }
     update_csv(filename, data)
 }

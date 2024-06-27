@@ -1,4 +1,5 @@
-use crate::{file::Line, now, Res};
+use crate::{file::Line, now, Res, MAX_WORDS_PER_SESSION};
+use std::io::{self, Write as _};
 
 fn interval_heuristic(line: &mut Line, success: Success) -> Res<()> {
     let last_interval = std::cmp::max(1, line.next - line.last);
@@ -32,11 +33,14 @@ where
 }
 
 fn io_prompt(line: &Line) -> Res<Success> {
-    print!("\t {} \t => ?", line.key);
-    std::io::stdin().read_line(&mut String::new())?;
-    print!("\t {} \t => \t {} \t[y/N/o]", line.key, line.value);
-    let buf = &mut String::new();
-    std::io::stdin().read_line(buf)?;
+    let mut buf = String::new();
+    write!(io::stdout(), "{} ? ", line.key)?;
+    io::stdout().flush()?;
+    io::stdin().read_line(&mut buf)?;
+    buf.clear();
+    write!(io::stdout(), "\t>>> {} \t[y/N/o] ", line.value)?;
+    io::stdout().flush()?;
+    io::stdin().read_line(&mut buf)?;
     Ok(buf.into())
 }
 
